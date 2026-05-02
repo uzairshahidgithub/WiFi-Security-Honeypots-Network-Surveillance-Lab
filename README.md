@@ -1,5 +1,3 @@
-# CIPHER LAB — GHOST SIGNAL: WiFi Security, Honeypots & Network Surveillance
-
 ## Legal Authorisation Statement
 
 > **You must only perform these attacks against networks and devices you own or have written permission to test. Performing these attacks against any network without explicit authorisation is illegal in every jurisdiction — including Pakistan (PECA 2016), UK (Computer Misuse Act 1990) and internationally (CFAA, Budapest Convention). This lab uses your own home router and controlled VMs only.**
@@ -12,12 +10,12 @@ Set up a dedicated lab access point (your home router or a second cheap TP-Link 
 
 ### Required Hardware
 
-| Item | Recommended Model | Chipset | PKR Price (Approx) | Where to Buy |
+| Item | Recommended Model | Chipset | PKR Price (Approx) |
 |---|---|---|---|---|
-| **USB WiFi Adapter** | TP-Link TL-WN722N **v1 ONLY** | Atheros AR9271 | 1,200–2,000 |
+| **USB WiFi Adapter** | TP-Link TL-WN722N **v1 ONLY** | Atheros AR9271 | 1,200–2,500 |
 
 <div align="center">
-  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcST7tTvuMlY7ajJi7PykXoCjoYPR8LepHsfvg&s" 
+  <img src="https://static.webx.pk/files/2603/Images/tl-wn722n-eu-3.0-02-large-1506586260889r-2603-2485961-101125024959066.webp" 
        alt="Wifi Dongul" 
        width="600"/>
 </div>
@@ -45,7 +43,11 @@ v3 (Realtek RTL8188EUS) — same as v2 — AVOID
 ---
 
 ## Environment Setup
-
+<div align="center">
+  <img src="https://github.com/uzairshahidgithub/WiFi-Security-Honeypots-Network-Surveillance-Lab/blob/main/Topology%20Lab%20Diagram.png?raw=true" 
+       alt="Daigram Lab" 
+       width="600"/>
+</div>
 
 All "victim" traffic is your own controlled devices. Never involve third-party devices.
 
@@ -1098,6 +1100,3 @@ sudo bettercap -iface eth0
 > set arp.spoof.targets <VICTIM_IP>; arp.spoof on
 > net.sniff on
 ```
-*CIPHER LAB — GHOST SIGNAL | WiFi Security, Honeypots & Network Surveillance*
-*Version 1.0 | Intermediate | 3 Hours | Free Tools Only | Own Network Required*
-*MITRE: T1040 | T1110.002 | T1557.002 | T1027.003 | T1566.001*
