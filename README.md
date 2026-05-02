@@ -4,14 +4,14 @@
 
 Set up a dedicated lab access point (your home router or a second cheap TP-Link router purchased for the purpose). Never run these against public Wi-Fi, neighbour networks or institutional infrastructure.
 
-## Hardware Requirements (Under 2000 PKR)
+## Hardware Requirements
 
 > Standard laptop built-in WiFi cards do NOT support monitor mode or packet injection. An external USB adapter is mandatory.
 
 ### Required Hardware
 
 | Item | Recommended Model | Chipset | PKR Price (Approx) |
-|---|---|---|---|---|
+|---|---|---|---|
 | **USB WiFi Adapter** | TP-Link TL-WN722N **v1 ONLY** | Atheros AR9271 | 1,200–2,500 |
 
 <div align="center">
